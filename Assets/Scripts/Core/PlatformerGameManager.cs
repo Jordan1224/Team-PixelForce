@@ -83,32 +83,40 @@ public class PlatformerGameManager : IUpdatable
 
     private void SpawnEnemies()
     {
-        // Patrol enemies
-        var patrolEnemy1 = new PatrolEnemy("PatrolEnemy1", new Vector2(10, 14));
-        _enemies.Add(patrolEnemy1);
-        patrolEnemy1.Initialize();
-        _collisionSystem.Register(patrolEnemy1);
+        // Patrol slimes
+        var slime1 = new PatrolEnemy("Slime-Patrol-1", new Vector2(15, 18));
+        _enemies.Add(slime1);
+        slime1.Initialize();
+        _collisionSystem.Register(slime1);
 
-        var patrolEnemy2 = new PatrolEnemy("PatrolEnemy2", new Vector2(25, 12));
-        _enemies.Add(patrolEnemy2);
-        patrolEnemy2.Initialize();
-        _collisionSystem.Register(patrolEnemy2);
+        var slime2 = new PatrolEnemy("Slime-Patrol-2", new Vector2(35, 14));
+        _enemies.Add(slime2);
+        slime2.Initialize();
+        _collisionSystem.Register(slime2);
 
-        // Chaser enemy
-        var chaser = new ChaserEnemy("ChaserEnemy1", new Vector2(38, 14));
-        _enemies.Add(chaser);
-        chaser.Initialize();
-        _collisionSystem.Register(chaser);
+        var slime3 = new PatrolEnemy("Slime-Patrol-3", new Vector2(48, 16));
+        _enemies.Add(slime3);
+        slime3.Initialize();
+        _collisionSystem.Register(slime3);
+
+        // Chaser slimes (more aggressive)
+        var chaserSlime = new ChaserEnemy("Slime-Chaser-1", new Vector2(55, 20));
+        _enemies.Add(chaserSlime);
+        chaserSlime.Initialize();
+        _collisionSystem.Register(chaserSlime);
     }
 
     private void SpawnCollectibles()
     {
-        // Spawn coins at various locations
+        // Spawn coins along the platform path
         var coinPositions = new Vector2[] {
-            new Vector2(5, 15),
-            new Vector2(15, 12),
-            new Vector2(28, 12),
-            new Vector2(45, 15)
+            new Vector2(14, 18),    // After first jump
+            new Vector2(20, 16),    // Mid-jump challenge
+            new Vector2(26, 14),    // Higher platform
+            new Vector2(35, 14),    // Wide platform
+            new Vector2(47, 15),    // Middle area
+            new Vector2(65, 16),    // Before goal
+            new Vector2(75, 13)     // Near goal
         };
 
         foreach (var pos in coinPositions)

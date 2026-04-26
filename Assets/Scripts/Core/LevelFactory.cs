@@ -5,82 +5,120 @@ public static class LevelFactory
 {
     public static Level CreateLevel1()
     {
-        var level = new Level(50, 20);
+        var level = new Level(80, 24);
 
-        // Create base platform
-        for (int x = 0; x < 50; x++)
-        {
+        // ===== BORDERS & WALLS =====
+        // Left wall
+        for (int y = 0; y < 24; y++)
+            level.SetTile(0, y, TileType.Solid);
+
+        // Right wall
+        for (int y = 0; y < 24; y++)
+            level.SetTile(79, y, TileType.Solid);
+
+        // Bottom floor
+        for (int x = 0; x < 80; x++)
+            level.SetTile(x, 23, TileType.Solid);
+
+        // ===== LEVEL DESIGN (Mario-style) =====
+        
+        // Starting platform
+        for (int x = 2; x < 10; x++)
+            level.SetTile(x, 21, TileType.Solid);
+
+        // Ascending platforms
+        for (int x = 12; x < 16; x++)
             level.SetTile(x, 19, TileType.Solid);
-        }
 
-        // Stairs and platforms
-        for (int x = 2; x < 8; x++)
-        {
-            level.SetTile(x, 17 - (x - 2), TileType.Solid);
-        }
+        for (int x = 18; x < 22; x++)
+            level.SetTile(x, 17, TileType.Solid);
 
-        // Gap
-        for (int x = 12; x < 15; x++)
-        {
+        for (int x = 24; x < 28; x++)
             level.SetTile(x, 15, TileType.Solid);
-        }
 
-        // Platform series
-        for (int x = 20; x < 25; x++)
-        {
-            level.SetTile(x, 14, TileType.Solid);
-        }
-
-        // Enemy area
-        for (int x = 28; x < 32; x++)
-        {
+        // Mid-level platform
+        for (int x = 30; x < 40; x++)
             level.SetTile(x, 16, TileType.Solid);
-        }
 
-        // Hazard spike
-        level.SetTile(35, 18, TileType.Hazard);
+        // Descending platforms
+        for (int x = 42; x < 46; x++)
+            level.SetTile(x, 18, TileType.Solid);
+
+        for (int x = 48; x < 52; x++)
+            level.SetTile(x, 20, TileType.Solid);
+
+        // Hazard spike section
+        level.SetTile(54, 22, TileType.Hazard);
+        level.SetTile(55, 22, TileType.Hazard);
+        level.SetTile(56, 22, TileType.Hazard);
+
+        // Final platform before goal
+        for (int x = 60; x < 70; x++)
+            level.SetTile(x, 19, TileType.Solid);
 
         // Goal area
-        for (int x = 40; x < 45; x++)
-        {
-            level.SetTile(x, 17, TileType.Solid);
-        }
-        level.SetTile(42, 16, TileType.Goal);
+        level.SetTile(65, 17, TileType.Goal);
 
         // Spawn point
-        level.SetTile(1, 17, TileType.SpawnPoint);
+        level.SetTile(4, 20, TileType.SpawnPoint);
 
         return level;
     }
 
     public static Level CreateLevel2()
     {
-        var level = new Level(60, 22);
+        var level = new Level(90, 26);
 
-        // Base
-        for (int x = 0; x < 60; x++)
-            level.SetTile(x, 21, TileType.Solid);
+        // ===== BORDERS & WALLS =====
+        for (int y = 0; y < 26; y++)
+            level.SetTile(0, y, TileType.Solid);
 
-        // Platforms
-        for (int x = 5; x < 10; x++)
+        for (int y = 0; y < 26; y++)
+            level.SetTile(89, y, TileType.Solid);
+
+        for (int x = 0; x < 90; x++)
+            level.SetTile(x, 25, TileType.Solid);
+
+        // ===== LEVEL DESIGN =====
+        
+        // Start area
+        for (int x = 2; x < 12; x++)
+            level.SetTile(x, 23, TileType.Solid);
+
+        // Jumping challenge - series of mid-air platforms
+        for (int x = 15; x < 18; x++)
+            level.SetTile(x, 20, TileType.Solid);
+
+        for (int x = 21; x < 24; x++)
             level.SetTile(x, 18, TileType.Solid);
 
-        for (int x = 15; x < 20; x++)
+        for (int x = 27; x < 30; x++)
             level.SetTile(x, 16, TileType.Solid);
 
-        for (int x = 25; x < 30; x++)
+        for (int x = 33; x < 36; x++)
             level.SetTile(x, 14, TileType.Solid);
 
+        // Wide platform with slime enemies
+        for (int x = 40; x < 55; x++)
+            level.SetTile(x, 17, TileType.Solid);
+
         // Hazard area
-        level.SetTile(32, 20, TileType.Hazard);
-        level.SetTile(33, 20, TileType.Hazard);
+        for (int x = 58; x < 61; x++)
+            level.SetTile(x, 24, TileType.Hazard);
+
+        // One-way platform (can drop through)
+        for (int x = 65; x < 72; x++)
+            level.SetTile(x, 19, TileType.OneWayPlatform);
+
+        // Final ascent
+        for (int x = 75; x < 80; x++)
+            level.SetTile(x, 15, TileType.Solid);
 
         // Goal
-        for (int x = 50; x < 56; x++)
-            level.SetTile(x, 18, TileType.Solid);
-        level.SetTile(53, 17, TileType.Goal);
+        level.SetTile(85, 13, TileType.Goal);
 
-        level.SetTile(1, 20, TileType.SpawnPoint);
+        // Spawn
+        level.SetTile(4, 22, TileType.SpawnPoint);
 
         return level;
     }
