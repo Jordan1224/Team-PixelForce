@@ -119,7 +119,7 @@ public class CollisionSystem : IUpdatable
         float overlapTop = playerBounds.Bottom - tileBounds.Top;
         float overlapBottom = tileBounds.Bottom - playerBounds.Top;
 
-        float minOverlap = System.Math.Min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+        float minOverlap = System.Math.Min(System.Math.Min(overlapLeft, overlapRight), System.Math.Min(overlapTop, overlapBottom));
 
         if (minOverlap == overlapLeft)
         {

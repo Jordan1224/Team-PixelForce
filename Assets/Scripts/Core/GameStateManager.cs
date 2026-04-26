@@ -1,3 +1,5 @@
+using System;
+using System.Numerics;
 /// <summary>
 /// Game state management.
 /// </summary>
