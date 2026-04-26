@@ -1,21 +1,26 @@
 using System;
-using System.Numerics;
+using UnityEngine;
 
 /// <summary>
-/// Base class for all game entities.
-/// Provides common behavior for components that need position, update loop, and lifecycle.
+/// Base class for all game entities in Unity.
+/// Provides common behavior for GameObjects in the scene.
 /// </summary>
-public abstract class GameEntity : IGameComponent, IUpdatable
+public abstract class GameEntity : MonoBehaviour
 {
-    public string Id { get; protected set; }
-    public bool IsActive { get; set; }
-    public Transform Transform { get; protected set; }
+    [SerializeField] protected string entityId;
+    protected bool isActive = true;
 
-    protected GameEntity(string id)
+    public string Id => entityId;
+    public bool IsActive => isActive;
+
+    protected virtual void Start()
     {
-        Id = id;
-        IsActive = true;
-        Transform = new Transform();
+        Initialize();
+    }
+
+    protected virtual void OnDestroy()
+    {
+        Shutdown();
     }
 
     public virtual void Initialize()

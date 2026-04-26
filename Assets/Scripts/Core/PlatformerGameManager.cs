@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Diagnostics;
 
-
 /// <summary>
 /// Main game orchestrator for platformer gameplay.
 /// </summary>

@@ -1,10 +1,13 @@
 using System;
+using UnityEngine;
 
 /// <summary>
 /// Health system for damageable entities.
 /// Can be composed into entities or inherited.
 /// </summary>
-public class HealthComponent : IDamageable
+/// 
+
+public class HealthComponent : MonoBehaviour, IDamageable
 {
     private int _health;
     

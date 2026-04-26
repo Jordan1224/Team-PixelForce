@@ -1,47 +1,60 @@
-using System.Numerics;
+using UnityEngine;
 
 /// <summary>
-/// Advanced player movement with coyote time and variable jump height.
+/// Advanced movement controller with coyote time and variable jump height.
+/// Integrates with Rigidbody2D for platformer mechanics.
 /// </summary>
-public class AdvancedMovementController
+public class AdvancedMovementController : MonoBehaviour
 {
+    private Rigidbody2D _rigidbody;
+    private PhysicsComponent _physicsComponent;
+    
+    // Coyote time: allows jump shortly after leaving ground
+    private float _coyoteCounter = 0f;
+    [SerializeField] private float _coyoteTime = 0.1f;
+    
+    // Jump hold: variable jump height based on button hold duration
+    private float _jumpHoldTimer = 0f;
+    [SerializeField] private float _maxJumpHoldTime = 0.15f;
+    [SerializeField] private float _jumpForce = 8f;
+    
     // Movement
-    public float MaxSpeed { get; set; } = 8f;
-    public float Acceleration { get; set; } = 25f;
-    public float GroundFriction { get; set; } = 0.85f;
-    public float AirFriction { get; set; } = 0.95f;
-
-    // Jumping
-    public float JumpForce { get; set; } = 12f;
-    public float MaxJumpHoldTime { get; set; } = 0.15f;
-    public float CoyoteTime { get; set; } = 0.1f; // Frames after leaving ground to allow jump
+    private Vector2 _moveInput;
+    private bool _jumpDown;
+    private bool _jumpPressed;
+    
+    [SerializeField] private float _maxSpeed = 8f;
+    [SerializeField] private float _groundFriction = 0.85f;
+    [SerializeField] private float _airFriction = 0.95f;
+    
+    private bool _isGrounded = false;
+    
     public float GravityScale { get; set; } = 1f;
 
-    // State
-    private Vector2 _moveInput = Vector2.Zero;
-    private bool _jumpInputDown = false;
-    private bool _jumpInputPressed = false;
-    private float _coyoteCounter = 0f;
-    private float _jumpHoldTimer = 0f;
-    private bool _isJumping = false;
-
-    public bool CanJump => _coyoteCounter > 0;
-    public bool IsJumping => _isJumping;
-    public bool IsGrounded => _coyoteCounter >= CoyoteTime;
-
-    public void SetInput(Vector2 moveDirection, bool jumpDown, bool jumpPressed)
+    private void Awake()
     {
-        _moveInput = moveDirection;
-        _jumpInputDown = jumpDown;
-        _jumpInputPressed = jumpPressed;
+        _rigidbody = GetComponent<Rigidbody2D>();
+        _physicsComponent = GetComponent<PhysicsComponent>();
+        
+        if (_rigidbody == null)
+            _rigidbody = gameObject.AddComponent<Rigidbody2D>();
     }
 
-    public void Update(PhysicsComponent physics, bool actuallyGrounded, float deltaTime)
+    public void SetInput(Vector2 moveInput, bool jumpDown, bool jumpPressed)
     {
+        _moveInput = moveInput;
+        _jumpDown = jumpDown;
+        _jumpPressed = jumpPressed;
+    }
+
+    public void UpdateMovement(bool isGrounded, float deltaTime)
+    {
+        _isGrounded = isGrounded;
+
         // Update coyote counter
-        if (actuallyGrounded)
+        if (_isGrounded)
         {
-            _coyoteCounter = CoyoteTime;
+            _coyoteCounter = _coyoteTime;
         }
         else
         {
@@ -49,63 +62,44 @@ public class AdvancedMovementController
         }
 
         // Handle jump input
-        if (_jumpInputPressed && CanJump && !_isJumping)
+        if (_jumpPressed && _coyoteCounter > 0)
         {
-            _isJumping = true;
-            _jumpHoldTimer = 0;
-            physics.Velocity = new Vector2(physics.Velocity.X, 0); // Reset vertical velocity
+            _jumpHoldTimer = _maxJumpHoldTime;
+            _coyoteCounter = 0; // Consume coyote time
         }
 
-        // Extend jump height while holding button
-        if (_jumpInputDown && _isJumping)
+        // Apply jump force while holding
+        if (_jumpDown && _jumpHoldTimer > 0)
         {
-            _jumpHoldTimer += deltaTime;
-            if (_jumpHoldTimer <= MaxJumpHoldTime)
-            {
-                // Apply continuous upward force
-                physics.ApplyForce(new Vector2(0, -JumpForce * 5f)); // Extra force while holding
-            }
-        }
-        else if (_isJumping)
-        {
-            _isJumping = false;
+            _rigidbody.velocity += Vector2.up * _jumpForce * deltaTime;
+            _jumpHoldTimer -= deltaTime;
         }
 
-        // Apply initial jump impulse
-        if (_isJumping && _jumpHoldTimer == 0)
+        // Apply horizontal movement
+        Vector2 currentVelocity = _rigidbody.velocity;
+        
+        if (Mathf.Abs(_moveInput.x) > 0.1f)
         {
-            physics.Velocity = new Vector2(physics.Velocity.X, -JumpForce);
-        }
-
-        // Apply horizontal movement acceleration
-        if (_moveInput.X != 0)
-        {
-            var targetVelocity = _moveInput.X * MaxSpeed;
-            var acceleration = Acceleration;
-            var newVelX = physics.Velocity.X;
-
-            if (System.Math.Abs(physics.Velocity.X) < MaxSpeed)
-            {
-                newVelX += _moveInput.X * acceleration * deltaTime;
-            }
-
-            newVelX = System.Math.Clamp(newVelX, -MaxSpeed, MaxSpeed);
-            physics.Velocity = new Vector2(newVelX, physics.Velocity.Y);
+            currentVelocity.x = _moveInput.x * _maxSpeed;
         }
         else
         {
-            // Apply friction
-            var friction = actuallyGrounded ? GroundFriction : AirFriction;
-            physics.Velocity = new Vector2(physics.Velocity.X * friction, physics.Velocity.Y);
+            // Decelerate
+            float friction = _isGrounded ? _groundFriction : _airFriction;
+            currentVelocity.x *= friction;
         }
 
-        _jumpInputPressed = false;
+        // Clamp speed
+        if (currentVelocity.magnitude > _maxSpeed)
+        {
+            currentVelocity = currentVelocity.normalized * _maxSpeed;
+        }
+
+        _rigidbody.velocity = currentVelocity;
     }
 
     public void OnGroundContact()
     {
-        _coyoteCounter = CoyoteTime;
-        _isJumping = false;
         _jumpHoldTimer = 0;
     }
 }

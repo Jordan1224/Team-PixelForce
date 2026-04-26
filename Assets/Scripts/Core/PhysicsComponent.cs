@@ -1,80 +1,54 @@
-using System.Numerics;
+using UnityEngine;
 
 /// <summary>
-/// Basic physics implementation for game objects.
-/// Can be composed into entities or inherited.
+/// Physics component for Unity GameObjects.
+/// Manages velocity, acceleration, and physics updates using Rigidbody2D.
 /// </summary>
-public class PhysicsComponent : IPhysicsBody
+public class PhysicsComponent : MonoBehaviour
 {
-    public Vector2 Velocity { get; set; }
-    public Vector2 Acceleration { get; set; }
+    private Rigidbody2D _rigidbody;
     
-    /// <summary>
-    /// Friction multiplier (0.95 = 5% slowdown per frame).
-    /// </summary>
-    public float Friction { get; set; } = 0.95f;
+    [SerializeField] private float friction = 0.95f;
+    [SerializeField] private float mass = 1f;
+    [SerializeField] private bool useGravity = true;
+    
+    private Vector2 _velocity;
+    private Vector2 _acceleration;
 
-    /// <summary>
-    /// Whether gravity affects this body.
-    /// </summary>
-    public bool UseGravity { get; set; } = true;
+    public Vector2 Velocity 
+    { 
+        get => _rigidbody.velocity;
+        set => _rigidbody.velocity = value;
+    }
 
-    /// <summary>
-    /// Whether this body is currently grounded.
-    /// </summary>
-    public bool IsGrounded { get; set; }
+    public float Mass => mass;
+    public float Friction => friction;
+    public bool UseGravity => useGravity;
 
-    /// <summary>
-    /// Mass of this body (for force calculations).
-    /// </summary>
-    public float Mass { get; set; } = 1f;
+    private void Awake()
+    {
+        _rigidbody = GetComponent<Rigidbody2D>();
+        if (_rigidbody == null)
+        {
+            _rigidbody = gameObject.AddComponent<Rigidbody2D>();
+            _rigidbody.gravityScale = useGravity ? 1f : 0f;
+            _rigidbody.mass = mass;
+        }
+    }
 
-    /// <summary>
-    /// Applies an instantaneous force to this body.
-    /// </summary>
     public void ApplyForce(Vector2 force)
     {
-        Acceleration += force / Mass;
+        _acceleration += force / mass;
     }
 
-    /// <summary>
-    /// Update position based on velocity and acceleration.
-    /// </summary>
-    public void Update(Transform transform, float deltaTime, Vector2 gravity = default)
-    {
-        // Apply gravity
-        if (UseGravity && gravity != Vector2.Zero)
-        {
-            Acceleration += gravity;
-        }
-
-        // Apply acceleration to velocity
-        Velocity += Acceleration * deltaTime;
-
-        // Apply friction
-        Velocity *= Friction;
-
-        // Update position
-        transform.Translate(Velocity * deltaTime);
-
-        // Reset acceleration each frame
-        Acceleration = Vector2.Zero;
-    }
-
-    /// <summary>
-    /// Instantly set velocity (for knockback, etc.)
-    /// </summary>
     public void SetVelocity(Vector2 newVelocity)
     {
-        Velocity = newVelocity;
+        _rigidbody.velocity = newVelocity;
     }
 
-    /// <summary>
-    /// Stop all movement.
-    /// </summary>
     public void Stop()
     {
-        Velocity = Vector2.Zero;
-        Acceleration = Vector2.Zero;
+        _rigidbody.velocity = Vector2.zero;
+        _acceleration = Vector2.zero;
     }
 }

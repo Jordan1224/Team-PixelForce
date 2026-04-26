@@ -1,75 +1,54 @@
 using System;
-using System.Numerics;
+using UnityEngine;
 
 /// <summary>
 /// Player character entity with physics, health, movement, and combat.
 /// </summary>
-public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidable
+public class PlayerCharacter : GameEntity
 {
+    private Rigidbody2D _rigidbody;
     private PhysicsComponent _physics;
-    private HealthComponent _health;
     private AdvancedMovementController _movementController;
-    private AnimationController _animationController;
+    private HealthComponent _health;
 
-    private float _attackCooldown = 0f;
-    private float _attackDuration = 0.5f;
+    [SerializeField] private float _attackCooldown = 0f;
+    [SerializeField] private float _attackDuration = 0.5f;
     private bool _isAttacking = false;
     private bool _isGrounded = false;
     private bool _reachedGoal = false;
 
-    public Vector2 Velocity
-    {
-        get => _physics.Velocity;
-        set => _physics.Velocity = value;
-    }
-
-    public int Health => _health.Health;
-    public System.Drawing.Rectangle Bounds => new System.Drawing.Rectangle(
-        (int)Transform.Position.X - 2,
-        (int)Transform.Position.Y - 3,
-        4,
-        6
-    );
-
+    public int Health => _health != null ? _health.CurrentHealth : 0;
     public bool HasReachedGoal => _reachedGoal;
 
     public event Action OnDestroyed;
     public event Action<int> OnDamageTaken;
     public event Action OnGoalReached;
 
-    public PlayerCharacter(string id) : base(id)
+    protected override void Start()
     {
-        _physics = new PhysicsComponent { Friction = 0.9f, UseGravity = true, Mass = 1f };
-        _health = new HealthComponent(maxHealth: 100);
-        _movementController = new AdvancedMovementController();
-        _animationController = new AnimationController();
+        base.Start();
+        
+        _rigidbody = GetComponent<Rigidbody2D>();
+        _physics = GetComponent<PhysicsComponent>();
+        _movementController = GetComponent<AdvancedMovementController>();
+        _health = GetComponent<HealthComponent>();
 
-        _health.OnDamageTaken += (damage) =>
+        if (_health != null)
         {
-            Console.WriteLine($"[{Id}] Took {damage} damage! Health: {_health.Health}/{_health.MaxHealth}");
-            _animationController.PlayAnimation("hit", loop: false);
-            OnDamageTaken?.Invoke(damage);
-        };
-
-        _health.OnDestroyed += () =>
-        {
-            Console.WriteLine($"[{Id}] Player defeated!");
-            IsActive = false;
-            _animationController.PlayAnimation("dead", loop: false);
-            OnDestroyed?.Invoke();
-        };
+            _health.OnDamageTaken += HandleDamage;
+            _health.OnDestroyed += HandleDeath;
+        }
     }
 
     public override void Initialize()
     {
-        Console.WriteLine($"PlayerCharacter [{Id}] initialized at {Transform.Position}");
-        _animationController.PlayAnimation("idle");
+        Debug.Log($"PlayerCharacter [{Id}] initialized at {transform.position}");
     }
 
     public void SetGrounded(bool grounded)
     {
         _isGrounded = grounded;
-        if (grounded)
+        if (grounded && _movementController != null)
             _movementController.OnGroundContact();
     }
 
@@ -78,7 +57,7 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
         if (!_reachedGoal)
         {
             _reachedGoal = true;
-            Console.WriteLine($"[{Id}] Reached the goal!");
+            Debug.Log($"[{Id}] Reached the goal!");
             OnGoalReached?.Invoke();
         }
     }
@@ -87,31 +66,10 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
     {
         if (!IsActive) return;
 
-        HandleInput();
+        if (_movementController != null)
+            _movementController.UpdateMovement(_isGrounded, deltaTime);
+
         UpdateAttack(deltaTime);
-        
-        // Update movement controller
-        _movementController.Update(_physics, _isGrounded, deltaTime);
-        
-        // Apply gravity
-        _physics.Acceleration += new Vector2(0, 9.8f * _movementController.GravityScale);
-        
-        // Update physics
-        _physics.Update(Transform, deltaTime);
-        _animationController.Update(deltaTime);
-
-        UpdateAnimationState();
-    }
-
-    private void HandleInput()
-    {
-        // This will be set by InputSystem in real implementation
-        var moveInput = Vector2.Zero;
-        var jumpDown = false;
-        var jumpPressed = false;
-
-        // For now, this is handled elsewhere
-        _movementController.SetInput(moveInput, jumpDown, jumpPressed);
     }
 
     private void UpdateAttack(float deltaTime)
@@ -121,43 +79,38 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
 
         if (_isAttacking)
         {
-            if (_animationController.IsFinished())
+            _attackDuration -= deltaTime;
+            if (_attackDuration <= 0)
             {
                 _isAttacking = false;
-                _animationController.PlayAnimation("idle");
+                _attackDuration = 0.5f;
             }
         }
     }
 
-    private void UpdateAnimationState()
+    private void HandleDamage(int damage)
     {
-        if (_isAttacking) return;
+        Debug.Log($"[{Id}] Took {damage} damage!");
+        OnDamageTaken?.Invoke(damage);
+    }
 
-        if (_isGrounded)
-        {
-            if (System.Math.Abs(_physics.Velocity.X) > 0.1f)
-            {
-                _animationController.PlayAnimation("run");
-            }
-            else
-            {
-                _animationController.PlayAnimation("idle");
-            }
-        }
-        else
-        {
-            _animationController.PlayAnimation("jump");
-        }
+    private void HandleDeath()
+    {
+        Debug.Log($"[{Id}] Player defeated!");
+        isActive = false;
+        OnDestroyed?.Invoke();
     }
 
     public void ApplyForce(Vector2 force)
     {
-        _physics.ApplyForce(force);
+        if (_physics != null)
+            _physics.ApplyForce(force);
     }
 
     public void TakeDamage(int amount)
     {
-        _health.TakeDamage(amount);
+        if (_health != null)
+            _health.TakeDamage(amount);
     }
 
     public void Attack()
@@ -166,21 +119,7 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
 
         _isAttacking = true;
         _attackCooldown = _attackDuration;
-        _animationController.PlayAnimation("attack", loop: false);
-
-        Console.WriteLine($"[{Id}] Attacks!");
-    }
-
-    public void OnCollision(ICollidable other)
-    {
-        if (other is EnemyBase enemy && _isAttacking)
-        {
-            enemy.TakeDamage(10);
-        }
-        else if (other is EnemyBase && !_isAttacking)
-        {
-            TakeDamage(5);
-        }
+        Debug.Log($"[{Id}] Attacks!");
     }
 
     public AdvancedMovementController GetMovementController()
@@ -190,6 +129,6 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
 
     public override void Shutdown()
     {
-        Console.WriteLine($"PlayerCharacter [{Id}] shutdown");
+        Debug.Log($"PlayerCharacter [{Id}] shutdown");
     }
 }
