@@ -8,13 +8,14 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
 {
     private PhysicsComponent _physics;
     private HealthComponent _health;
-    private MovementController _movementController;
-    private CollisionController _collisionController;
+    private AdvancedMovementController _movementController;
     private AnimationController _animationController;
 
     private float _attackCooldown = 0f;
     private float _attackDuration = 0.5f;
     private bool _isAttacking = false;
+    private bool _isGrounded = false;
+    private bool _reachedGoal = false;
 
     public Vector2 Velocity
     {
@@ -30,15 +31,17 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
         6
     );
 
+    public bool HasReachedGoal => _reachedGoal;
+
     public event Action OnDestroyed;
     public event Action<int> OnDamageTaken;
+    public event Action OnGoalReached;
 
     public PlayerCharacter(string id) : base(id)
     {
-        _physics = new PhysicsComponent { Friction = 0.9f, UseGravity = true };
+        _physics = new PhysicsComponent { Friction = 0.9f, UseGravity = true, Mass = 1f };
         _health = new HealthComponent(maxHealth: 100);
-        _movementController = new MovementController();
-        _collisionController = new CollisionController();
+        _movementController = new AdvancedMovementController();
         _animationController = new AnimationController();
 
         _health.OnDamageTaken += (damage) =>
@@ -63,15 +66,38 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
         _animationController.PlayAnimation("idle");
     }
 
+    public void SetGrounded(bool grounded)
+    {
+        _isGrounded = grounded;
+        if (grounded)
+            _movementController.OnGroundContact();
+    }
+
+    public void ReachGoal()
+    {
+        if (!_reachedGoal)
+        {
+            _reachedGoal = true;
+            Console.WriteLine($"[{Id}] Reached the goal!");
+            OnGoalReached?.Invoke();
+        }
+    }
+
     public override void Tick(float deltaTime)
     {
         if (!IsActive) return;
 
         HandleInput();
         UpdateAttack(deltaTime);
-        _movementController.Update(_physics, _collisionController.IsGrounded);
-        _collisionController.Update(Transform, _physics.Velocity);
-        _physics.Update(Transform, deltaTime, new Vector2(0, 9.8f));
+        
+        // Update movement controller
+        _movementController.Update(_physics, _isGrounded, deltaTime);
+        
+        // Apply gravity
+        _physics.Acceleration += new Vector2(0, 9.8f * _movementController.GravityScale);
+        
+        // Update physics
+        _physics.Update(Transform, deltaTime);
         _animationController.Update(deltaTime);
 
         UpdateAnimationState();
@@ -81,10 +107,11 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
     {
         // This will be set by InputSystem in real implementation
         var moveInput = Vector2.Zero;
-        var jumpInput = false;
+        var jumpDown = false;
+        var jumpPressed = false;
 
         // For now, this is handled elsewhere
-        _movementController.SetInput(moveInput, jumpInput);
+        _movementController.SetInput(moveInput, jumpDown, jumpPressed);
     }
 
     private void UpdateAttack(float deltaTime)
@@ -106,7 +133,7 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
     {
         if (_isAttacking) return;
 
-        if (_collisionController.IsGrounded)
+        if (_isGrounded)
         {
             if (System.Math.Abs(_physics.Velocity.X) > 0.1f)
             {
@@ -142,7 +169,6 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
         _animationController.PlayAnimation("attack", loop: false);
 
         Console.WriteLine($"[{Id}] Attacks!");
-        // Damage enemies in range
     }
 
     public void OnCollision(ICollidable other)
