@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Diagnostics;
 
+
 /// <summary>
 /// Main game orchestrator for platformer gameplay.
 /// </summary>
@@ -17,7 +18,7 @@ public class PlatformerGameManager : IUpdatable
     private CollectibleSystem _collectibles;
     private CollisionSystem _collisionSystem;
     private InputSystem _inputSystem;
-    private UISystem _uiSystem;
+    private AdvancedRenderingSystem _renderingSystem;
     private GameStateManager _stateManager;
 
     private bool _levelComplete = false;
@@ -32,7 +33,6 @@ public class PlatformerGameManager : IUpdatable
             LevelFactory.CreateLevel2()
         };
 
-        _uiSystem = new UISystem();
         _inputSystem = new InputSystem();
         _stateManager = new GameStateManager();
         _collectibles = new CollectibleSystem();
@@ -78,7 +78,8 @@ public class PlatformerGameManager : IUpdatable
         // Spawn collectibles
         SpawnCollectibles();
 
-        _uiSystem.SetLevel(_currentLevelIndex + 1, _levels.Length);
+        // Create rendering system for this level
+        _renderingSystem = new AdvancedRenderingSystem(_currentLevel, _player, _enemies, _collectibles);
     }
 
     private void SpawnEnemies()
@@ -130,7 +131,7 @@ public class PlatformerGameManager : IUpdatable
     {
         _levelComplete = true;
         _stateManager.SetState(GameStateType.LevelComplete);
-        _uiSystem.RenderGameOver(true);
+        Console.WriteLine("\n=== LEVEL COMPLETE ===");
         Console.ReadKey();
         LoadLevel(_currentLevelIndex + 1);
         _stateManager.SetState(GameStateType.Playing);
@@ -139,7 +140,7 @@ public class PlatformerGameManager : IUpdatable
     private void OnPlayerDeath()
     {
         _stateManager.SetState(GameStateType.GameOver);
-        _uiSystem.RenderGameOver(false);
+        Console.WriteLine("\n=== GAME OVER ===");
         Console.ReadKey();
         LoadLevel(_currentLevelIndex); // Restart current level
         _stateManager.SetState(GameStateType.Playing);
@@ -171,8 +172,8 @@ public class PlatformerGameManager : IUpdatable
         // Check collectibles
         _collectibles.CheckCollisions(_player.Bounds);
 
-        // Render UI
-        _uiSystem.Render(_player, _collectibles, _stateManager.CurrentState.ToString());
+        // Render frame
+        _renderingSystem.Tick(deltaTime);
     }
 
     private void HandleInput()
@@ -200,9 +201,9 @@ public class PlatformerGameManager : IUpdatable
                 break;
         }
 
-        // This needs to be passed to player movement controller
-        // For now, we'll set it directly
-        _player.GetMovementController().SetInput(moveInput, jumpDown, jumpPressed);
+        // Pass input to player's movement controller
+        if (_player.GetMovementController() != null)
+            _player.GetMovementController().SetInput(moveInput, jumpDown, jumpPressed);
     }
 
     public void Run()
@@ -229,21 +230,4 @@ public class PlatformerGameManager : IUpdatable
     }
 }
 
-// Helper extension to PlayerCharacter
-public static class PlayerCharacterExtensions
-{
-    private static Dictionary<PlayerCharacter, AdvancedMovementController> _movementMap = 
-        new Dictionary<PlayerCharacter, AdvancedMovementController>();
 
-    public static void SetMovementController(this PlayerCharacter player, AdvancedMovementController controller)
-    {
-        _movementMap[player] = controller;
-    }
-
-    public static AdvancedMovementController GetMovementController(this PlayerCharacter player)
-    {
-        if (_movementMap.TryGetValue(player, out var controller))
-            return controller;
-        return null;
-    }
-}

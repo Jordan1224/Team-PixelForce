@@ -183,6 +183,11 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidabl
         }
     }
 
+    public AdvancedMovementController GetMovementController()
+    {
+        return _movementController;
+    }
+
     public override void Shutdown()
     {
         Console.WriteLine($"PlayerCharacter [{Id}] shutdown");
