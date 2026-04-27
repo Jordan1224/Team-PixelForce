@@ -31,5 +31,5 @@ public abstract class EnemyBase : GameEntity, IDamageable, ICollidable
     // ICollidable
     public Collider2D GetCollider() => _collider;
     public Vector2 GetPosition() => transform.position;
-    public void OnCollide(ICollidable other) { }
+    public virtual void OnCollide(ICollidable other) { }
 }
