@@ -5,7 +5,7 @@ using UnityEngine;
 /// Player character entity with physics, health, movement, and combat.
 /// </summary>
 
-public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollectible
+public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable
 {
     private Rigidbody2D _rigidbody;
     private PhysicsComponent _physics;
@@ -32,6 +32,30 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollectib
         Debug.Log("Player collided with: " + other);
     }
 
+    private Vector2 _velocity;
+
+    public Vector2 Velocity
+    {
+        get => _velocity;
+        set => _velocity = value;
+    }
+
+    private Rigidbody2D _rb;
+
+    private void Awake()
+    {
+        _rb = GetComponent<Rigidbody2D>();
+    }
+
+    private void FixedUpdate()
+    {
+        if (_rb != null)
+           _rb.linearVelocity = _velocity;
+
+    }
+
+
+
     [SerializeField] private string characterName;
 
     [SerializeField] private float _attackCooldown = 0f;
@@ -40,7 +64,7 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollectib
     private bool _isGrounded = false;
     private bool _reachedGoal = false;
 
-    public int Health => _health != null ? _health.CurrentHealth : 0;
+    public int Health => _health != null ? _health.Health : 0;
     public bool HasReachedGoal => _reachedGoal;
 
     public event Action OnDestroyed;

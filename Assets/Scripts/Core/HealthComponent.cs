@@ -1,26 +1,20 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// Health system for damageable entities.
-/// Can be composed into entities or inherited.
-/// </summary>
-/// 
-
 public class HealthComponent : MonoBehaviour, IDamageable
 {
+    [SerializeField] private int maxHealth = 100;
     private int _health;
-    
-    public int MaxHealth { get; }
+
+    public int MaxHealth => maxHealth;
     public int Health => _health;
 
     public event Action OnDestroyed;
     public event Action<int> OnDamageTaken;
     public event Action<int> OnHealed;
 
-    public HealthComponent(int maxHealth)
+    private void Awake()
     {
-        MaxHealth = maxHealth;
         _health = maxHealth;
     }
 
@@ -45,8 +39,8 @@ public class HealthComponent : MonoBehaviour, IDamageable
         int oldHealth = _health;
         _health += amount;
 
-        if (_health > MaxHealth)
-            _health = MaxHealth;
+        if (_health > maxHealth)
+            _health = maxHealth;
 
         int healed = _health - oldHealth;
         if (healed > 0)
@@ -55,6 +49,6 @@ public class HealthComponent : MonoBehaviour, IDamageable
 
     public void Reset()
     {
-        _health = MaxHealth;
+        _health = maxHealth;
     }
 }
