@@ -46,60 +46,72 @@ public class CollisionSystem : IUpdatable
 
     private void CheckEntityCollision(ICollidable a, ICollidable b)
     {
-        var boundsA = a.Bounds;
-        var boundsB = b.Bounds;
+        var boundsA = GetBounds(a);
+        var boundsB = GetBounds(b);
 
-        if (boundsA.IntersectsWith(boundsB))
+        if (BoundsIntersect(boundsA, boundsB))
         {
-            a.OnCollision(b);
-            b.OnCollision(a);
+            a.OnCollide(b);
+            b.OnCollide(a);
         }
+    }
+
+    private Bounds GetBounds(ICollidable collidable)
+    {
+        var collider = collidable.GetCollider();
+        if (collider != null)
+            return collider.bounds;
+        var pos = collidable.GetPosition();
+        return new Bounds(pos, Vector3.one);
+    }
+
+    private bool BoundsIntersect(Bounds a, Bounds b)
+    {
+        return a.Intersects(b);
     }
 
     private void CheckLevelCollisions(ICollidable entity)
     {
         if (entity is PlayerCharacter player)
         {
-            var bounds = player.Bounds;
-            var tilesInBounds = _level.GetTilesInBounds(bounds);
+            var bounds = GetBounds(player);
+            var playerPos = player.GetPosition();
 
             bool isGrounded = false;
 
-            foreach (var (x, y, tileType) in tilesInBounds)
+            // Check all tiles in level
+            for (int x = 0; x < _level.Width; x++)
             {
-                var tileBounds = _level.GetTileBounds(x, y);
+                for (int y = 0; y < _level.Height; y++)
+                {
+                    var tileType = _level.GetTile(x, y);
+                    if (tileType == TileType.Empty) continue;
 
-                if (tileType == TileType.Solid || tileType == TileType.Platform)
-                {
-                    // Check if player is above tile (landing)
-                    if (bounds.Bottom >= tileBounds.Top && bounds.Bottom <= tileBounds.Top + 10 &&
-                        player.Velocity.y >= 0)
+                    var tileBoundsRect = _level.GetTileBounds(x, y);
+                    var tileBounds = RectToBounds(tileBoundsRect);
+
+                    if (tileType == TileType.Solid || tileType == TileType.Platform)
                     {
-                        isGrounded = true;
-                        player.Transform.Position = new Vector2(
-                            player.Transform.Position.x,
-                            tileBounds.Top - (bounds.Height / 2)
-                        );
+                        // Check if player is above tile (landing)
+                        if (BoundsIntersect(bounds, tileBounds) && player.Velocity.y >= 0)
+                        {
+                            isGrounded = true;
+                            player.transform.position = new Vector3(playerPos.x, tileBounds.max.y + bounds.extents.y, player.transform.position.z);
+                        }
                     }
-                    // Check collision from sides
-                    else if (bounds.IntersectsWith(tileBounds))
+                    else if (tileType == TileType.Hazard)
                     {
-                        // Resolve collision (simple push out)
-                        PushOutOfTile(player, tileBounds);
+                        if (BoundsIntersect(bounds, tileBounds))
+                        {
+                            player.TakeDamage(100); // Instant death
+                        }
                     }
-                }
-                else if (tileType == TileType.Hazard)
-                {
-                    if (bounds.IntersectsWith(tileBounds))
+                    else if (tileType == TileType.Goal)
                     {
-                        player.TakeDamage(100); // Instant death
-                    }
-                }
-                else if (tileType == TileType.Goal)
-                {
-                    if (bounds.IntersectsWith(tileBounds))
-                    {
-                        player.ReachGoal();
+                        if (BoundsIntersect(bounds, tileBounds))
+                        {
+                            player.ReachGoal();
+                        }
                     }
                 }
             }
@@ -108,27 +120,11 @@ public class CollisionSystem : IUpdatable
         }
     }
 
-    private void PushOutOfTile(PlayerCharacter player, System.Drawing.Rectangle tileBounds)
+    private Bounds RectToBounds(System.Drawing.Rectangle rect)
     {
-        var playerPos = player.Transform.Position;
-        var playerBounds = player.Bounds;
-
-        // Determine push direction based on overlap
-        float overlapLeft = playerBounds.Right - tileBounds.Left;
-        float overlapRight = tileBounds.Right - playerBounds.Left;
-        float overlapTop = playerBounds.Bottom - tileBounds.Top;
-        float overlapBottom = tileBounds.Bottom - playerBounds.Top;
-
-        float minOverlap = System.Math.Min(System.Math.Min(overlapLeft, overlapRight), System.Math.Min(overlapTop, overlapBottom));
-
-        if (minOverlap == overlapLeft)
-        {
-            player.Transform.Position = new Vector2(tileBounds.Left - playerBounds.Width / 2 - 0.1f, playerPos.Y);
-        }
-        else if (minOverlap == overlapRight)
-        {
-            player.Transform.Position = new Vector2(tileBounds.Right + playerBounds.Width / 2 + 0.1f, playerPos.Y);
-        }
+        var center = new Vector3(rect.X + rect.Width / 2f, rect.Y + rect.Height / 2f, 0);
+        var size = new Vector3(rect.Width, rect.Height, 1);
+        return new Bounds(center, size);
     }
 
     public void Clear()

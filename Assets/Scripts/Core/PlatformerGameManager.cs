@@ -89,26 +89,34 @@ public class PlatformerGameManager : IUpdatable
     private void SpawnEnemies()
     {
         // Patrol slimes
-        var slime1 = new PatrolEnemy("Slime-Patrol-1", new Vector2(15, 18));
-        _enemies.Add(slime1);
-        slime1.Initialize();
-        _collisionSystem.Register(slime1);
+        var slime1 = new GameObject("Slime-Patrol-1");
+        slime1.transform.position = new Vector3(15, 18, 0);
+        var enemy1 = slime1.AddComponent<Enemy>();
+        _enemies.Add(enemy1);
+        enemy1.Initialize();
+        _collisionSystem.Register(enemy1);
 
-        var slime2 = new PatrolEnemy("Slime-Patrol-2", new Vector2(35, 14));
-        _enemies.Add(slime2);
-        slime2.Initialize();
-        _collisionSystem.Register(slime2);
+        var slime2 = new GameObject("Slime-Patrol-2");
+        slime2.transform.position = new Vector3(35, 14, 0);
+        var enemy2 = slime2.AddComponent<Enemy>();
+        _enemies.Add(enemy2);
+        enemy2.Initialize();
+        _collisionSystem.Register(enemy2);
 
-        var slime3 = new PatrolEnemy("Slime-Patrol-3", new Vector2(48, 16));
-        _enemies.Add(slime3);
-        slime3.Initialize();
-        _collisionSystem.Register(slime3);
+        var slime3 = new GameObject("Slime-Patrol-3");
+        slime3.transform.position = new Vector3(48, 16, 0);
+        var enemy3 = slime3.AddComponent<Enemy>();
+        _enemies.Add(enemy3);
+        enemy3.Initialize();
+        _collisionSystem.Register(enemy3);
 
         // Chaser slimes (more aggressive)
-        var chaserSlime = new ChaserEnemy("Slime-Chaser-1", new Vector2(55, 20));
-        _enemies.Add(chaserSlime);
-        chaserSlime.Initialize();
-        _collisionSystem.Register(chaserSlime);
+        var chaserSlime = new GameObject("Slime-Chaser-1");
+        chaserSlime.transform.position = new Vector3(55, 20, 0);
+        var chaserEnemy = chaserSlime.AddComponent<Enemy>();
+        _enemies.Add(chaserEnemy);
+        chaserEnemy.Initialize();
+        _collisionSystem.Register(chaserEnemy);
     }
 
     private void SpawnCollectibles()
@@ -166,7 +174,8 @@ public class PlatformerGameManager : IUpdatable
             if (enemy.IsActive)
             {
                 enemy.Tick(deltaTime);
-                enemy.UpdateAI(_player);
+                if (enemy is Enemy e)
+                    e.UpdateAI(_player);
             }
         }
 
@@ -174,7 +183,7 @@ public class PlatformerGameManager : IUpdatable
         _collisionSystem.Tick(deltaTime);
 
         // Check collectibles
-        _collectibles.CheckCollisions(_player.Bounds);
+        _collectibles.CheckCollisions(_player.GetPosition());
 
         // Render frame
         _renderingSystem.Tick(deltaTime);
@@ -184,17 +193,17 @@ public class PlatformerGameManager : IUpdatable
     {
         var command = _inputSystem.PollInput();
         
-        Vector2 moveInput = Vector2.Zero;
+        Vector2 moveInput = Vector2.zero;
         bool jumpDown = false;
         bool jumpPressed = false;
 
         switch (command)
         {
             case InputCommand.MoveLeft:
-                moveInput.X = -1;
+                moveInput = new Vector2(-1, moveInput.y);
                 break;
             case InputCommand.MoveRight:
-                moveInput.X = 1;
+                moveInput = new Vector2(1, moveInput.y);
                 break;
             case InputCommand.Jump:
                 jumpDown = true;

@@ -7,7 +7,6 @@ using UnityEngine;
 public class Enemy : EnemyBase
 {
     private PhysicsComponent _physics;
-    private HealthComponent _health;
     private float _patrolSpeed = 2f;
     private float _moveDirection = 1f;
 
@@ -28,22 +27,29 @@ public class Enemy : EnemyBase
     }
 
     public override void OnCollide(ICollidable other)
-{
-    // Example: damage the player
-    if (other is PlayerCharacter player)
-        player.TakeDamage(1);
-}
-
+    {
+        // Example: damage the player
+        if (other is PlayerCharacter player)
+            player.TakeDamage(1);
+    }
 
     public Vector2 Velocity
     {
-        get => _physics.Velocity;
-        set => _physics.Velocity = value;
+        get => _physics?.Velocity ?? Vector2.zero;
+        set { if (_physics != null) _physics.Velocity = value; }
     }
 
-    public int Health => _health.Health;
-    public event Action OnDestroyed;
-    public event Action<int> OnDamageTaken;
+    public virtual void UpdateAI(PlayerCharacter player)
+    {
+        // Patrol movement
+        _rb.linearVelocity = new Vector2(_moveDirection * _patrolSpeed, 0);
+
+        // Bounce at boundaries
+        if (transform.position.x < -50 || transform.position.x > 50)
+        {
+            _moveDirection *= -1;
+        }
+    }
 
     protected override void Awake()
     {
@@ -100,7 +106,7 @@ public class Enemy : EnemyBase
         _physics.ApplyForce(force);
     }
 
-    public void TakeDamage(int amount)
+    public new void TakeDamage(int amount)
     {
         _health.TakeDamage(amount);
     }

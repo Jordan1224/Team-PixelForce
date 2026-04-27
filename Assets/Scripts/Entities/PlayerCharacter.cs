@@ -5,18 +5,20 @@ using UnityEngine;
 /// Player character entity with physics, health, movement, and combat.
 /// </summary>
 
-public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable
+public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollidable
 {
     private Rigidbody2D _rigidbody;
     private PhysicsComponent _physics;
     private AdvancedMovementController _movementController;
     private HealthComponent _health;
+
     public void Initialize(string name)
     {
         this.characterName = name;
         Debug.Log("Initialized player: " + name);
     }
 
+    // ICollidable
     public Collider2D GetCollider()
     {
         return GetComponent<Collider2D>();
@@ -31,6 +33,20 @@ public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable
     {
         Debug.Log("Player collided with: " + other);
     }
+
+    // Properties for old API compatibility
+    public Bounds Bounds
+    {
+        get
+        {
+            var collider = GetComponent<Collider2D>();
+            if (collider != null)
+                return collider.bounds;
+            return new Bounds(transform.position, Vector3.one);
+        }
+    }
+
+    public GameEntity Transform => this;
 
     private Vector2 _velocity;
 
