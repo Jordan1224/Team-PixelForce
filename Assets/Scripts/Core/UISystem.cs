@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 /// <summary>
 /// Game UI state display.
@@ -19,29 +20,27 @@ public class UISystem
     {
         if (_showDebugInfo)
         {
-            Console.SetCursorPosition(0, 0);
-            Console.WriteLine($"=== PixelForce Level {_currentLevel}/{_totalLevels} ===".PadRight(Console.WindowWidth));
-            Console.WriteLine($"Health: {player.Health}/100  |  Coins: {collectibles.TotalCollected}  |  State: {currentState}".PadRight(Console.WindowWidth));
-            Console.WriteLine($"Pos: ({player.Transform.Position.X:F1}, {player.Transform.Position.Y:F1})  |  Vel: ({player.Velocity.X:F1}, {player.Velocity.Y:F1})".PadRight(Console.WindowWidth));
-            Console.WriteLine();
+            var pos = player.transform.position;
+            var vel = player.Velocity;
+            Debug.Log($"=== PixelForce Level {_currentLevel}/{_totalLevels} ===");
+            Debug.Log($"Health: {player.Health}/100  |  Coins: {collectibles.TotalCollected}  |  State: {currentState}");
+            Debug.Log($"Pos: ({pos.x:F1}, {pos.y:F1})  |  Vel: ({vel.x:F1}, {vel.y:F1})");
         }
     }
 
     public void RenderGameOver(bool won)
     {
-        Console.Clear();
         if (won)
         {
-            Console.WriteLine("╔════════════════════════╗");
-            Console.WriteLine("║     LEVEL COMPLETE!    ║");
-            Console.WriteLine("╚════════════════════════╝");
+            Debug.Log("╔════════════════════════╗");
+            Debug.Log("║     LEVEL COMPLETE!    ║");
+            Debug.Log("╚════════════════════════╝");
         }
         else
         {
-            Console.WriteLine("╔════════════════════════╗");
-            Console.WriteLine("║      GAME OVER!        ║");
-            Console.WriteLine("╚════════════════════════╝");
+            Debug.Log("╔════════════════════════╗");
+            Debug.Log("║      GAME OVER!        ║");
+            Debug.Log("╚════════════════════════╝");
         }
-        Console.WriteLine("\nPress any key to continue...");
     }
 }

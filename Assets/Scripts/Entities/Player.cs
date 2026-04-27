@@ -8,69 +8,67 @@ public class Player : GameEntity, IPhysicsBody, IDamageable
 {
     private PhysicsComponent _physics;
     private HealthComponent _health;
+    private Rigidbody2D _rb;
     private float _speed = 5f;
 
     public Vector2 Velocity 
     { 
-        get => _physics.Velocity;
-        set => _physics.Velocity = value;
+        get => _physics != null ? _physics.Velocity : Vector2.zero;
+        set { if (_physics != null) _physics.Velocity = value; }
     }
 
-    public int Health => _health.Health;
+    public int Health => _health != null ? _health.Health : 0;
     public event Action OnDestroyed;
     public event Action<int> OnDamageTaken;
 
-    public Player(string id) : base(id)
+    protected override void Start()
     {
-        _physics = new PhysicsComponent();
-        _health = new HealthComponent(maxHealth: 100);
+        base.Start();
+        _rb = GetComponent<Rigidbody2D>();
+        _physics = GetComponent<PhysicsComponent>();
+        _health = GetComponent<HealthComponent>();
 
-        _health.OnDamageTaken += (damage) =>
+        if (_health != null)
         {
-            Console.WriteLine($"[{Id}] Took {damage} damage! Health: {_health.Health}/{_health.MaxHealth}");
-            OnDamageTaken?.Invoke(damage);
-        };
+            _health.OnDamageTaken += (damage) =>
+            {
+                Debug.Log($"[{Id}] Took {damage} damage! Health: {_health.Health}/{_health.MaxHealth}");
+                OnDamageTaken?.Invoke(damage);
+            };
 
-        _health.OnDestroyed += () =>
-        {
-            Console.WriteLine($"[{Id}] Defeated!");
-            IsActive = false;
-            OnDestroyed?.Invoke();
-        };
+            _health.OnDestroyed += () =>
+            {
+                Debug.Log($"[{Id}] Defeated!");
+                gameObject.SetActive(false);
+                OnDestroyed?.Invoke();
+            };
+        }
     }
 
     public override void Initialize()
     {
-        Console.WriteLine($"Player [{Id}] initialized at {Transform.Position}");
+        Debug.Log($"Player [{Id}] initialized at {transform.position}");
     }
 
     public override void Tick(float deltaTime)
     {
-        if (!IsActive) return;
+        if (!isActive) return;
 
         HandleInput(deltaTime);
-        _physics.Update(Transform, deltaTime);
     }
 
     private void HandleInput(float deltaTime)
     {
-        Vector2 moveDirection = Vector2.Zero;
+        Vector2 moveDirection = Vector2.zero;
 
-        // Simple WASD input
-        if (Console.KeyAvailable)
-        {
-            var key = Console.ReadKey(true).KeyChar;
-            switch (char.ToLower(key))
-            {
-                case 'w': moveDirection.Y -= 1; break;
-                case 's': moveDirection.Y += 1; break;
-                case 'a': moveDirection.X -= 1; break;
-                case 'd': moveDirection.X += 1; break;
-                case 'e': TakeDamage(10); break;
-            }
-        }
+        // Unity Input system
+        if (Input.GetKey(KeyCode.W)) moveDirection = new Vector2(moveDirection.x, moveDirection.y - 1);
+        if (Input.GetKey(KeyCode.S)) moveDirection = new Vector2(moveDirection.x, moveDirection.y + 1);
+        if (Input.GetKey(KeyCode.A)) moveDirection = new Vector2(moveDirection.x - 1, moveDirection.y);
+        if (Input.GetKey(KeyCode.D)) moveDirection = new Vector2(moveDirection.x + 1, moveDirection.y);
+        if (Input.GetKeyDown(KeyCode.E)) TakeDamage(10);
 
-        if (moveDirection != Vector2.Zero)
+        if (moveDirection != Vector2.zero)
         {
             moveDirection = Vector2.Normalize(moveDirection);
             ApplyForce(moveDirection * _speed);
@@ -79,16 +77,18 @@ public class Player : GameEntity, IPhysicsBody, IDamageable
 
     public void ApplyForce(Vector2 force)
     {
-        _physics.ApplyForce(force);
+        if (_physics != null)
+            _physics.ApplyForce(force);
     }
 
     public void TakeDamage(int amount)
     {
-        _health.TakeDamage(amount);
+        if (_health != null)
+            _health.TakeDamage(amount);
     }
 
     public override void Shutdown()
     {
-        Console.WriteLine($"Player [{Id}] shutdown");
+        Debug.Log($"Player [{Id}] shutdown");
     }
 }

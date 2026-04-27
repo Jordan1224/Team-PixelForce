@@ -32,36 +32,18 @@ public class PhysicsSystem : IUpdatable
 
     /// <summary>
     /// Run physics simulation at fixed timestep for stability.
+    /// Note: Actual physics is handled by Unity's Rigidbody2D.
+    /// This system mainly handles collision queries.
     /// </summary>
     public void Tick(float deltaTime)
     {
-        _accumulatedTime += deltaTime;
-
-        // Fixed timestep physics loop (prevents instability at high framerates)
-        while (_accumulatedTime >= _fixedDeltaTime)
-        {
-            SimulatePhysics(_fixedDeltaTime);
-            _accumulatedTime -= _fixedDeltaTime;
-        }
+        // Physics is handled by Unity's engine with Rigidbody2D
+        // We just maintain the bodies list and can query it if needed
     }
 
     private void SimulatePhysics(float deltaTime)
     {
-        // Update all physics bodies
-        foreach (var body in _bodies)
-        {
-            if (body is PhysicsComponent physics)
-            {
-                // Find the entity this body belongs to
-                var entity = FindEntityForBody(body);
-                if (entity != null && entity.IsActive)
-                {
-                    physics.Update(entity.Transform, deltaTime, _gravity);
-                }
-            }
-        }
-
-        // Resolve collisions (simplified broadphase)
+        // Collision detection using ICollidable interface
         for (int i = 0; i < _bodies.Count; i++)
         {
             for (int j = i + 1; j < _bodies.Count; j++)
@@ -76,17 +58,21 @@ public class PhysicsSystem : IUpdatable
         // Check if both are collidable
         if (body1 is ICollidable col1 && body2 is ICollidable col2)
         {
-            var bounds1 = col1.Bounds;
-            var bounds2 = col2.Bounds;
+            var collider1 = col1.GetCollider();
+            var collider2 = col2.GetCollider();
 
-            // AABB collision detection
-            if (bounds1.X < bounds2.X + bounds2.Width &&
-                bounds1.X + bounds1.Width > bounds2.X &&
-                bounds1.Y < bounds2.Y + bounds2.Height &&
-                bounds1.Y + bounds1.Height > bounds2.Y)
+            // Use Unity's collider bounds for AABB collision detection
+            if (collider1 != null && collider2 != null)
             {
-                col1.OnCollision(col2);
-                col2.OnCollision(col1);
+                var bounds1 = collider1.bounds;
+                var bounds2 = collider2.bounds;
+
+                // AABB collision detection
+                if (bounds1.Intersects(bounds2))
+                {
+                    col1.OnCollide(col2);
+                    col2.OnCollide(col1);
+                }
             }
         }
     }

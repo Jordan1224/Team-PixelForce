@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
+using UnityEngine;
 
 /// <summary>
 /// Simple state machine for enemy AI.
@@ -50,7 +50,7 @@ public class DetectionComponent
     public bool HasLineOfSight { get; set; }
     public PlayerCharacter DetectedPlayer { get; set; }
 
-    public void Update(Transform detector, PlayerCharacter player)
+    public void Update(Vector2 detectorPos, PlayerCharacter player)
     {
         if (player == null || !player.IsActive)
         {
@@ -59,7 +59,7 @@ public class DetectionComponent
             return;
         }
 
-        var distance = Vector2.Distance(detector.Position, player.Transform.Position);
+        var distance = Vector2.Distance(detectorPos, player.transform.position);
         
         if (distance <= VisionRadius)
         {
@@ -113,7 +113,8 @@ public class AISystem : IUpdatable
             {
                 if (enemy.IsActive)
                 {
-                    enemy.UpdateAI(_player);
+                    if (enemy is Enemy e)
+                        e.UpdateAI(_player);
                 }
             }
         }

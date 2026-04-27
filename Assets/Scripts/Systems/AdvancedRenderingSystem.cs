@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
+using UnityEngine;
 
 /// <summary>
 /// ASCII sprite definitions for console rendering.
@@ -95,7 +95,7 @@ public class AdvancedRenderingSystem : IUpdatable
     private void UpdateCamera()
     {
         // Center camera on player
-        _cameraX = _player.Transform.Position.X - (_screenWidth / 4);
+        _cameraX = _player.transform.position.x - (_screenWidth / 4);
         _cameraX = System.Math.Max(0, System.Math.Min(_cameraX, _level.Width - _screenWidth));
     }
 
@@ -159,8 +159,8 @@ public class AdvancedRenderingSystem : IUpdatable
         {
             if (!enemy.IsActive) continue;
 
-            int screenX = (int)(enemy.Transform.Position.X - _cameraX);
-            int screenY = (int)enemy.Transform.Position.Y + 1;
+            int screenX = (int)(enemy.transform.position.x - _cameraX);
+            int screenY = (int)enemy.transform.position.y + 1;
 
             if (screenX >= 0 && screenX < _screenWidth && screenY >= 0 && screenY < _screenHeight - 4)
             {
@@ -172,8 +172,8 @@ public class AdvancedRenderingSystem : IUpdatable
 
     private void DrawPlayer()
     {
-        int screenX = (int)(_player.Transform.Position.X - _cameraX);
-        int screenY = (int)_player.Transform.Position.Y + 1;
+        int screenX = (int)(_player.transform.position.x - _cameraX);
+        int screenY = (int)_player.transform.position.y + 1;
 
         if (screenX >= 0 && screenX < _screenWidth && screenY >= 0 && screenY < _screenHeight - 4)
         {
@@ -200,9 +200,11 @@ public class AdvancedRenderingSystem : IUpdatable
     private void DrawHUD()
     {
         int hudY = _screenHeight - 3;
+        var playerPos = _player.transform.position;
+        var playerVel = _player.Velocity;
 
         string line1 = $"❤ Health: {_player.Health}/100  |  🪙 Coins: {_collectibles.TotalCollected}";
-        string line2 = $"Pos: ({_player.Transform.Position.X:F1}, {_player.Transform.Position.Y:F1})  |  Vel: ({_player.Velocity.X:F1}, {_player.Velocity.Y:F1})";
+        string line2 = $"Pos: ({playerPos.x:F1}, {playerPos.y:F1})  |  Vel: ({playerVel.x:F1}, {playerVel.y:F1})";
         string line3 = "A/D: Move | W/SPACE: Jump | P: Pause | ESC: Quit";
 
         DrawString(line1, 1, hudY);
