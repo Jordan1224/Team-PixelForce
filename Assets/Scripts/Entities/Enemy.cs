@@ -1,5 +1,5 @@
 using System;
-using System.Numerics;
+using UnityEngine;
 
 /// <summary>
 /// Example enemy entity that demonstrates AI, physics, and health.
@@ -29,13 +29,13 @@ public class Enemy : GameEntity, IPhysicsBody, IDamageable
 
         _health.OnDamageTaken += (damage) =>
         {
-            Console.WriteLine($"[{Id}] Enemy took {damage} damage! Health: {_health.Health}/{_health.MaxHealth}");
+            Debug.Log($"[{Id}] Enemy took {damage} damage! Health: {_health.Health}/{_health.MaxHealth}");
             OnDamageTaken?.Invoke(damage);
         };
 
         _health.OnDestroyed += () =>
         {
-            Console.WriteLine($"[{Id}] Enemy defeated!");
+            Debug.Log($"[{Id}] Enemy defeated!");
             IsActive = false;
             OnDestroyed?.Invoke();
         };
@@ -43,7 +43,7 @@ public class Enemy : GameEntity, IPhysicsBody, IDamageable
 
     public override void Initialize()
     {
-        Console.WriteLine($"Enemy [{Id}] spawned at {Transform.Position}");
+        Debug.Log($"Enemy [{Id}] spawned at {transform.position}");
     }
 
     public override void Tick(float deltaTime)
@@ -54,12 +54,12 @@ public class Enemy : GameEntity, IPhysicsBody, IDamageable
         ApplyForce(new Vector2(_moveDirection * _patrolSpeed, 0));
 
         // Bounce at boundaries
-        if (Transform.Position.X < -50 || Transform.Position.X > 50)
+        if (transform.position.x < -50 || transform.position.x > 50)
         {
             _moveDirection *= -1;
         }
 
-        _physics.Update(Transform, deltaTime);
+        _physics.Update(transform, deltaTime);
     }
 
     public void ApplyForce(Vector2 force)
@@ -74,6 +74,6 @@ public class Enemy : GameEntity, IPhysicsBody, IDamageable
 
     public override void Shutdown()
     {
-        Console.WriteLine($"Enemy [{Id}] removed");
+        Debug.Log($"Enemy [{Id}] removed");
     }
 }

@@ -1,6 +1,6 @@
 using System;
-using System.Numerics;
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// Static utility to avoid Vector2 allocations.
@@ -16,7 +16,7 @@ public static class VectorPool
     /// </summary>
     public static Vector2 Get()
     {
-        return _pool.Count > 0 ? _pool.Pop() : Vector2.Zero;
+        return _pool.Count > 0 ? _pool.Pop() : Vector2.zero;
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
+using UnityEngine;
 
 /// <summary>
 /// Collectible item in the world.
@@ -57,20 +57,17 @@ public class CollectibleSystem
         _collectibles.Remove(collectible);
     }
 
-    public void CheckCollisions(System.Drawing.Rectangle playerBounds)
+    public void CheckCollisions(Vector2 playerPosition, float playerRadius = 1f)
     {
         foreach (var collectible in _collectibles)
         {
             if (!collectible.IsActive) continue;
 
-            var itemBounds = new System.Drawing.Rectangle(
-                (int)collectible.Position.X - 5,
-                (int)collectible.Position.Y - 5,
-                10,
-                10
-            );
+            // Simple distance-based collision
+            float distance = Vector2.Distance(playerPosition, collectible.Position);
+            float collisionDistance = playerRadius + 0.5f; // Collectible radius
 
-            if (playerBounds.IntersectsWith(itemBounds))
+            if (distance <= collisionDistance)
             {
                 collectible.OnCollect();
                 _totalCollected++;

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Numerics;
+using UnityEngine;
 
 /// <summary>
 /// Defines a tile in the world.
@@ -90,7 +90,7 @@ public class Level
                     return new Vector2(x * TileSize + TileSize / 2, y * TileSize);
             }
         }
-        return Vector2.Zero;
+        return Vector2.zero;
     }
 
     public Vector2 FindGoal()
@@ -103,6 +103,6 @@ public class Level
                     return new Vector2(x * TileSize + TileSize / 2, y * TileSize);
             }
         }
-        return Vector2.Zero;
+        return Vector2.zero;
     }
 }

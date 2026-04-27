@@ -17,8 +17,8 @@ public class PhysicsComponent : MonoBehaviour
 
     public Vector2 Velocity 
     { 
-        get => _rigidbody.velocity;
-        set => _rigidbody.velocity = value;
+        get => _rigidbody.linearVelocity;
+        set => _rigidbody.linearVelocity = value;
     }
 
     public float Mass => mass;
@@ -43,12 +43,12 @@ public class PhysicsComponent : MonoBehaviour
 
     public void SetVelocity(Vector2 newVelocity)
     {
-        _rigidbody.velocity = newVelocity;
+        _rigidbody.linearVelocity = newVelocity;
     }
 
     public void Stop()
     {
-        _rigidbody.velocity = Vector2.zero;
+        _rigidbody.linearVelocity = Vector2.zero;
         _acceleration = Vector2.zero;
     }
 }

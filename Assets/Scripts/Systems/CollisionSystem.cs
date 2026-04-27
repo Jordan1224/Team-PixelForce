@@ -1,4 +1,4 @@
-using System.Numerics;
+using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
@@ -73,11 +73,11 @@ public class CollisionSystem : IUpdatable
                 {
                     // Check if player is above tile (landing)
                     if (bounds.Bottom >= tileBounds.Top && bounds.Bottom <= tileBounds.Top + 10 &&
-                        player.Velocity.Y >= 0)
+                        player.Velocity.y >= 0)
                     {
                         isGrounded = true;
                         player.Transform.Position = new Vector2(
-                            player.Transform.Position.X,
+                            player.Transform.Position.x,
                             tileBounds.Top - (bounds.Height / 2)
                         );
                     }

@@ -71,12 +71,12 @@ public class AdvancedMovementController : MonoBehaviour
         // Apply jump force while holding
         if (_jumpDown && _jumpHoldTimer > 0)
         {
-            _rigidbody.velocity += Vector2.up * _jumpForce * deltaTime;
+            _rigidbody.linearVelocity += Vector2.up * _jumpForce * deltaTime;
             _jumpHoldTimer -= deltaTime;
         }
 
         // Apply horizontal movement
-        Vector2 currentVelocity = _rigidbody.velocity;
+        Vector2 currentVelocity = _rigidbody.linearVelocity;
         
         if (Mathf.Abs(_moveInput.x) > 0.1f)
         {
@@ -95,7 +95,7 @@ public class AdvancedMovementController : MonoBehaviour
             currentVelocity = currentVelocity.normalized * _maxSpeed;
         }
 
-        _rigidbody.velocity = currentVelocity;
+        _rigidbody.linearVelocity = currentVelocity;
     }
 
     public void OnGroundContact()

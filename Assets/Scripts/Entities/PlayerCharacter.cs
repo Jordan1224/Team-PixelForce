@@ -4,12 +4,35 @@ using UnityEngine;
 /// <summary>
 /// Player character entity with physics, health, movement, and combat.
 /// </summary>
-public class PlayerCharacter : GameEntity
+
+public class PlayerCharacter : GameEntity, IPhysicsBody, IDamageable, ICollectible
 {
     private Rigidbody2D _rigidbody;
     private PhysicsComponent _physics;
     private AdvancedMovementController _movementController;
     private HealthComponent _health;
+    public void Initialize(string name)
+    {
+        this.characterName = name;
+        Debug.Log("Initialized player: " + name);
+    }
+
+    public Collider2D GetCollider()
+    {
+        return GetComponent<Collider2D>();
+    }
+
+    public Vector2 GetPosition()
+    {
+        return transform.position;
+    }
+
+    public void OnCollide(ICollidable other)
+    {
+        Debug.Log("Player collided with: " + other);
+    }
+
+    [SerializeField] private string characterName;
 
     [SerializeField] private float _attackCooldown = 0f;
     [SerializeField] private float _attackDuration = 0.5f;

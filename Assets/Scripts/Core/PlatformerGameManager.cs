@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
+using UnityEngine;
 using System.Diagnostics;
 
 /// <summary>
@@ -62,8 +62,13 @@ public class PlatformerGameManager : IUpdatable
         _collectibles.Clear();
 
         // Create player
-        _player = new PlayerCharacter("Hero");
-        _player.Transform.Position = _currentLevel.FindSpawnPoint();
+        GameObject playerObj = new GameObject("Player");
+        PlayerCharacter _player = playerObj.AddComponent<PlayerCharacter>();
+        _player.Initialize("Hero");
+
+        Vector2 spawn = _currentLevel.FindSpawnPoint();
+        _player.transform.position = new Vector3(spawn.x, spawn.y, _player.transform.position.z);
+
         _player.OnGoalReached += OnLevelComplete;
         _player.OnDestroyed += OnPlayerDeath;
 
